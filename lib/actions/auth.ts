@@ -8,6 +8,8 @@ import { eq } from "drizzle-orm"
 import { headers } from "next/headers"
 import ratelimit from "../ratelimit"
 import { redirect } from "next/navigation"
+import { workflowClient } from "../workflow"
+import config from "../config"
 
 
 export const signUp = async (params: AuthCredentials) => {
@@ -43,6 +45,15 @@ export const signUp = async (params: AuthCredentials) => {
                 password: hashedPasword
             })
 
+        await workflowClient.trigger({
+            url: `${config.env.prodApiEndpoint}/api/workflows/onboarding`,
+            body: {
+                email,
+                fullName
+            }
+        })
+
+
         await signInWithCredentials({ email, password })
         return { success: true }
 
@@ -62,7 +73,7 @@ export const signInWithCredentials = async (
     const ip = (await headers()).get('x-forwarded-for') || '127.0.0.1'
     const { success } = await ratelimit.limit(ip)
     if (!success) redirect('/too-fast')
-        
+
     try {
         const result = await signIn('credentials', {
             email,
