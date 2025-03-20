@@ -13,3 +13,16 @@ export interface Book {
     summary: string;
     isLoanedBook?: boolean
 }
+
+export interface BooksParams {
+    title: string;
+    author: string;
+    genre: string;
+    rating: number;
+    coverColor: string;
+    coverUrl: string;
+    totalCopies: number;
+    description: string;
+    summary: string;
+    videoUrl:string;
+}
