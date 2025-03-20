@@ -3,8 +3,17 @@ import Image from 'next/image'
 import React from 'react'
 import { Button } from './ui/button'
 import BookCover from './BookCover'
+import { db } from '@/database/drizzle'
+import { users } from '@/database/schema'
+import { eq } from 'drizzle-orm'
+import BorrowBook from './BorrowBook'
 
-const BookOverview = ({
+interface Props extends Book {
+    userId: string,
+
+}
+
+const BookOverview = async ({
     title,
     author,
     genre,
@@ -13,10 +22,27 @@ const BookOverview = ({
     availableCopies,
     description,
     coverColor,
-    coverUrl
-}: Book) => {
-    return (
+    coverUrl,
+    id,
+    userId
+}: Props) => {
 
+    const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1)
+
+    const borrowingEligibility = {
+
+        isElegible: availableCopies > 0 && user?.status === "APPROVED",
+
+        message: availableCopies <= 0
+            ? "Book is not available"
+            : "You are not elegible to borrow this book"
+    }
+
+    return (
         <section className="book-overview">
             <div className="flex flex-1 flex-col gap-5">
                 <h1>{title}</h1>
@@ -49,13 +75,13 @@ const BookOverview = ({
 
                 <p className="book-description">{description}</p>
 
-                {/* {user && (
+                {user && (
                     <BorrowBook
                         bookId={id}
                         userId={userId}
                         borrowingEligibility={borrowingEligibility}
                     />
-                )} */}
+                )}
             </div>
 
             <div className="relative flex flex-1 justify-center">
@@ -77,7 +103,7 @@ const BookOverview = ({
                 </div>
             </div>
         </section>
-        
+
     )
 }
 
